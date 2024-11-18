@@ -13,17 +13,25 @@ $eventManager->addEventHandlerCompatible("crm", "OnAfterCrmDealAdd", ['Fields', 
 $eventManager->addEventHandlerCompatible("crm", "OnBeforeCrmDealUpdate", ['Fields', 'BeforeDealUpdate']);
 $eventManager->addEventHandlerCompatible("crm", "OnAfterCrmDealDelete", ['Fields', 'AfterDealDelete']);
 
+$eventManager->addEventHandler("iblock", "OnAfterIBlockElementAdd", ['Fields', 'OnAfterIBlockElementAddHandler']);
 $eventManager->addEventHandler("iblock", "OnAfterIBlockElementUpdate", ['Fields', 'OnAfterIBlockElementUpdateHandler']);
 $eventManager->addEventHandler("iblock", "OnAfterIBlockElementDelete", ['Fields', 'OnAfterIBlockElementDeleteHandler']);
 
 
 class Fields
 {
-    const IBLOCK_ID = 18;
+
     protected static $handlerDisallow = false;
 
     public static function AfterDealAdd(&$arFields)
     {
+
+        if (self::$handlerDisallow) {
+            return true;
+        }
+
+        self::$handlerDisallow = true;
+
         $findIblockElement = ElementAppotusTable::getRow([
             'select' => ['ID', 'NAME', 'APP_NUMBER_' => 'APPLICATION'],
             'filter' => ['APP_NUMBER_VALUE' => $arFields['ID']],
@@ -31,13 +39,14 @@ class Fields
 
         if(empty($findIblockElement)) {
             $el = new CIBlockElement;
+            $iblockId = self::getIblockId();
             $arLoadProductArray = [
-                'IBLOCK_ID' => self::IBLOCK_ID,
+                'IBLOCK_ID' => $iblockId,
                 'NAME' => 'Сделка с ID: '.$arFields['ID'],
                 'PROPERTY_VALUES' => [
                     'APPLICATION' => $arFields['ID'],
                     'SUMM' => $arFields['OPPORTUNITY_ACCOUNT'],
-                    'ASSIGNED_BY_ID_OTUS' => $arFields['CREATED_BY_ID']
+                    'ASSIGNED_BY_ID_OTUS' => $arFields['ASSIGNED_BY_ID']
                 ]
             ];
 
@@ -47,6 +56,7 @@ class Fields
                 throw new \Exception($el->LAST_ERROR);
             }
         }
+
         return true;
     }
 
@@ -101,9 +111,58 @@ class Fields
             CIBlockElement::Delete($findIblockElementId['ID']);
         }
 
-       return true;
+        return true;
     }
 
+
+    public static function OnAfterIBlockElementAddHandler(&$arFields)
+    {
+
+        if (self::$handlerDisallow) {
+            return true;
+        }
+
+        self::$handlerDisallow = true;
+
+        if($arFields['ID'] > 0) {
+            $fieldsIblock = ElementAppotusTable::getByPrimary($arFields['ID'], [
+                'select' => ['APPLICATION_' => 'APPLICATION', 'SUMM_' => 'SUMM', 'ASSIGNED_BY_ID_OTUS_' => 'ASSIGNED_BY_ID_OTUS'],
+            ])->fetch();
+
+            if((int)$fieldsIblock['APPLICATION_VALUE'] > 0) {
+                $findDeal = DealTable::getRow([
+                    'filter' => ['ID' => (int)$fieldsIblock['APPLICATION_VALUE']],
+                    'select' => ['ID']
+                ]);
+
+                if(empty($findDeal)) {
+                    $entityFields = [
+                        'TITLE'    => 'Новая сделка',
+                        'STAGE_ID' => 'NEW',
+                        'CURRENCY_ID' => 'RUB',
+                        'OPPORTUNITY' => $fieldsIblock['SUMM_VALUE'] ?? '',
+                        'ASSIGNED_BY_ID' => $fieldsIblock['ASSIGNED_BY_ID_OTUS_VALUE'] ?? '',
+                    ];
+
+                    $entityObject = new \CCrmDeal();
+
+                    $entityId = $entityObject->Add(
+                        $entityFields,
+                        $bUpdateSearch = true,
+                    );
+
+                    if (!$entityId) {
+                        throw new \Exception($entityId->LAST_ERROR);
+                    } else {
+                        CIBlockElement::SetPropertyValuesEx($arFields['ID'], false, ['APPLICATION' => $entityId ]);
+                    }
+
+                    self::$handlerDisallow = false;
+                }
+            }
+        }
+        return true;
+    }
 
     public static function OnAfterIBlockElementUpdateHandler(&$arFields)
     {
@@ -113,10 +172,12 @@ class Fields
 
         self::$handlerDisallow = true;
 
-        if($arFields['IBLOCK_ID'] == self::IBLOCK_ID) {
+        $iblockId = self::getIblockId();
+
+        if($arFields['IBLOCK_ID'] == $iblockId) {
             $propertyCode = ['APPLICATION', 'SUMM', 'ASSIGNED_BY_ID_OTUS'];
             $rsProperty = PropertyTable::getList(array(
-                'filter' => array('IBLOCK_ID'=> self::IBLOCK_ID,'ACTIVE'=>'Y', 'CODE' => $propertyCode),
+                'filter' => array('IBLOCK_ID'=> $iblockId,'ACTIVE'=>'Y', 'CODE' => $propertyCode),
                 'select' => ['ID', 'CODE']
             ))->fetchAll();
 
@@ -199,7 +260,9 @@ class Fields
 
         return true;
     }
+
+    protected static function getIblockId(): int
+    {
+        return ElementAppotusTable::getEntity()->getIblock()->getId();
+    }
 }
-
-
-
