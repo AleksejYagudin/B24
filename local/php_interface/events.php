@@ -142,6 +142,7 @@ class Fields
                         'CURRENCY_ID' => 'RUB',
                         'OPPORTUNITY' => $fieldsIblock['SUMM_VALUE'] ?? '',
                         'ASSIGNED_BY_ID' => $fieldsIblock['ASSIGNED_BY_ID_OTUS_VALUE'] ?? '',
+                        'UF_CRM_DEAL_APP' => $arFields['ID']
                     ];
 
                     $entityObject = new \CCrmDeal();
@@ -154,7 +155,8 @@ class Fields
                     if (!$entityId) {
                         throw new \Exception($entityId->LAST_ERROR);
                     } else {
-                        CIBlockElement::SetPropertyValuesEx($arFields['ID'], false, ['APPLICATION' => $entityId ]);
+                        $iblockId = self::getIblockId();
+                        CIBlockElement::SetPropertyValuesEx($arFields['ID'], false, ['APPLICATION' => $entityId]);
                     }
 
                     self::$handlerDisallow = false;
