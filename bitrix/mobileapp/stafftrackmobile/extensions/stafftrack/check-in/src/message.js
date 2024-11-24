@@ -98,7 +98,7 @@ jn.define('stafftrack/check-in/message', (require, exports, module) => {
 					useState: false,
 					mode: SwitcherMode.SOLID,
 					checked: this.state.sendMessage,
-					testId: 'stafftrack-message-switcher',
+					testId: `stafftrack-message${this.isCancelReason ? '-cancel' : ''}-switcher`,
 					style: {
 						marginRight: Indent.L.toNumber(),
 					},
@@ -126,7 +126,7 @@ jn.define('stafftrack/check-in/message', (require, exports, module) => {
 					flex: 1,
 					marginLeft: Indent.XS.toNumber(),
 				},
-				testId: 'stafftrack-message-chat-selector',
+				testId: `stafftrack-message${this.isCancelReason ? '-cancel' : ''}-chat-selector`,
 			});
 		}
 
@@ -141,6 +141,7 @@ jn.define('stafftrack/check-in/message', (require, exports, module) => {
 					flex: 1,
 					marginLeft: Indent.XS.toNumber(),
 				},
+				testId: `stafftrack-message${this.isCancelReason ? '-cancel' : ''}-selected-chat-text`,
 			});
 		}
 
@@ -243,7 +244,7 @@ jn.define('stafftrack/check-in/message', (require, exports, module) => {
 		renderTextField()
 		{
 			return new TextInputWithMaxHeight({
-				testId: 'stafftrack-checkin-message-input',
+				testId: `stafftrack-message${this.isCancelReason ? '-cancel' : ''}-input`,
 				value: this.state.rawValue,
 				enable: this.isInputEnabled(),
 				placeholder: this.props.placeholder,
@@ -264,7 +265,7 @@ jn.define('stafftrack/check-in/message', (require, exports, module) => {
 		renderDefaultMessageText()
 		{
 			return new ScrollViewWithMaxHeight({
-				testId: 'stafftrack-checkin-message-text',
+				testId: `stafftrack-message${this.isCancelReason ? '-cancel' : ''}-text`,
 				onClick: this.showAlreadyCheckInToast,
 				style: {
 					minHeight: 20,

@@ -11,7 +11,6 @@ jn.define('stafftrack/ajax/shift', (require, exports, module) => {
 		LIST: 'list',
 		LOAD_MAIN: 'loadMain',
 		GET_GEO_INFO: 'getGeoInfo',
-		HANDLE_FIRST_HELP_VIEW: 'handleFirstHelpView',
 		MUTE_COUNTER: 'muteCounter',
 	};
 
@@ -35,10 +34,10 @@ jn.define('stafftrack/ajax/shift', (require, exports, module) => {
 		}
 
 		/**
-		 * @param filter
-		 * @param select
-		 * @param order
-		 * @param limit
+		 * @param filter {object}
+		 * @param select {object}
+		 * @param order {object}
+		 * @param limit {object}
 		 * @returns {Promise<Object, void>}
 		 */
 		list(filter, select = {}, order = {}, limit = 0)
@@ -88,15 +87,6 @@ jn.define('stafftrack/ajax/shift', (require, exports, module) => {
 		getGeoInfo({ latitude, longitude })
 		{
 			return this.fetch(ShiftActions.GET_GEO_INFO, { latitude, longitude });
-		}
-
-		/**
-		 *
-		 * @returns {Promise<Object, void>}
-		 */
-		handleFirstHelpView()
-		{
-			return this.fetch(ShiftActions.HANDLE_FIRST_HELP_VIEW);
 		}
 
 		/**

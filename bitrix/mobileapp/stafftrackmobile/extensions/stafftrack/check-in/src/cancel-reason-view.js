@@ -74,6 +74,7 @@ jn.define('stafftrack/check-in/cancel-reason-view', (require, exports, module) =
 
 	const ReasonDescription = (reason) => {
 		return new ScrollViewWithMaxHeight({
+			testId: 'stafftrack-shift-cancel-description',
 			style: {
 				minHeight: 20,
 				maxHeight: 60,

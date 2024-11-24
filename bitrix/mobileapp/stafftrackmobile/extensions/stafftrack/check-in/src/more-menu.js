@@ -7,15 +7,14 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 	const { showToast } = require('toast');
 	const { outline: { alert } } = require('assets/icons');
 	const { Haptics } = require('haptics');
+	const { AvaMenu } = require('ava-menu');
+
+	const { Icon } = require('ui-system/blocks/icon');
 
 	const { ShiftAjax } = require('stafftrack/ajax');
 	const { MuteEnum } = require('stafftrack/model/counter');
 	const { BaseMenu, baseSectionType } = require('stafftrack/base-menu');
-
-	const { Icon } = require('ui-system/blocks/icon');
-
 	const { SettingsPage } = require('stafftrack/check-in/pages/settings');
-	const { AvaMenu } = require('ava-menu');
 
 	const helpSectionType = 'help';
 
@@ -28,35 +27,20 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 		{
 			return [
 				this.getMutedItem(),
-				this.getSettingsButton(),
+				this.getSettingsItem(),
 				this.getHelpItem(),
 			];
 		}
 
 		getMutedItem()
 		{
-			if (this.props.isMuted === true)
-			{
-				return {
-					id: itemTypes.remind,
-					sectionCode: baseSectionType,
-					testId: 'stafftrack-settings-remind-menu',
-					title: Loc.getMessage('M_STAFFTRACK_CHECK_IN_REMIND'),
-					iconName: Icon.SOUND_ON.getIconName(),
-					styles: {
-						icon: {
-							color: Color.base3.toHex(),
-						},
-					},
-				};
-			}
-
 			return {
-				id: itemTypes.doNotRemind,
+				id: itemTypes.remind,
 				sectionCode: baseSectionType,
-				testId: 'stafftrack-settings-do-not-remind-menu',
-				title: Loc.getMessage('M_STAFFTRACK_CHECK_IN_DO_NOT_REMIND'),
-				iconName: Icon.SOUND_OFF.getIconName(),
+				checked: this.props.isMuted === false,
+				testId: 'stafftrack-settings-remind-menu',
+				title: Loc.getMessage('M_STAFFTRACK_CHECK_IN_REMIND'),
+				iconName: Icon.SOUND_ON.getIconName(),
 				styles: {
 					icon: {
 						color: Color.base3.toHex(),
@@ -65,13 +49,8 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 			};
 		}
 
-		getSettingsButton()
+		getSettingsItem()
 		{
-			if (!this.props.isAdmin)
-			{
-				return null;
-			}
-
 			return {
 				id: itemTypes.settings,
 				sectionCode: baseSectionType,
@@ -88,11 +67,9 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 
 		getHelpItem()
 		{
-			const sectionCode = this.props.isAdmin ? helpSectionType : baseSectionType;
-
 			return {
 				id: itemTypes.help,
-				sectionCode,
+				sectionCode: helpSectionType,
 				testId: 'stafftrack-settings-show-help-menu',
 				title: Loc.getMessage('M_STAFFTRACK_CHECK_IN_HELP_MSGVER_1'),
 				iconName: Icon.QUESTION.getIconName(),
@@ -106,22 +83,16 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 
 		getSections()
 		{
-			const sections = [
+			return [
 				{
 					id: baseSectionType,
 					title: '',
 				},
-			];
-
-			if (this.props.isAdmin)
-			{
-				sections.push({
+				{
 					id: helpSectionType,
 					title: '',
-				});
-			}
-
-			return sections;
+				},
+			];
 		}
 
 		onItemSelected(item)
@@ -132,10 +103,7 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 					this.showHelp();
 					break;
 				case itemTypes.remind:
-					this.unmute();
-					break;
-				case itemTypes.doNotRemind:
-					this.mute();
+					this.changeRemindStatus(item);
 					break;
 				case itemTypes.settings:
 					this.openSettings();
@@ -145,11 +113,25 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 			}
 		}
 
+		changeRemindStatus(item)
+		{
+			const remindStatus = !item.checked;
+
+			if (remindStatus)
+			{
+				this.unmute();
+			}
+			else
+			{
+				this.mute();
+			}
+		}
+
 		mute()
 		{
 			this.props.isMuted = true;
 			ShiftAjax.muteCounter(MuteEnum.PERMANENT.toNumber());
-			this.showInfoMuteToast(Loc.getMessage('M_STAFFTRACK_CHECK_IN_DO_NOT_REMIND_TOAST'));
+			this.showInfoToast(Loc.getMessage('M_STAFFTRACK_CHECK_IN_DO_NOT_REMIND_TOAST'));
 
 			AvaMenu.setCounter({ elemId: 'check_in', value: '0' });
 		}
@@ -158,7 +140,7 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 		{
 			this.props.isMuted = false;
 			ShiftAjax.muteCounter(MuteEnum.DISABLED.toNumber());
-			this.showInfoMuteToast(Loc.getMessage('M_STAFFTRACK_CHECK_IN_REMIND_TOAST'));
+			this.showInfoToast(Loc.getMessage('M_STAFFTRACK_CHECK_IN_REMIND_TOAST'));
 
 			if (this.props.hasShift === false)
 			{
@@ -166,7 +148,7 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 			}
 		}
 
-		showInfoMuteToast(message)
+		showInfoToast(message)
 		{
 			showToast({
 				message,
@@ -189,7 +171,9 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 
 		openSettings()
 		{
-			new SettingsPage({ backdrop: true }).show(this.layoutWidget);
+			const { isAdmin } = this.props;
+
+			new SettingsPage({ isAdmin }).show(this.layoutWidget);
 		}
 	}
 
@@ -197,7 +181,6 @@ jn.define('stafftrack/check-in/more-menu', (require, exports, module) => {
 		help: 'help',
 		settings: 'settings',
 		remind: 'remind',
-		doNotRemind: 'doNotRemind',
 	};
 
 	module.exports = { MoreMenu };

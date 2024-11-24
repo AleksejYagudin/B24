@@ -1,2 +1,2 @@
 <?php
-$MESS["IMMOBILE_PLAN_LIMITS_WIDGET_TITTLE"] = "Protokoll der Chatnachrichten";
+$MESS["IMMOBILE_PLAN_LIMITS_WIDGET_TITTLE"] = "Chat-History";

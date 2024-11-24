@@ -29,6 +29,7 @@ return [
 		'stafftrack:month-picker',
 		'stafftrack:shift-view',
 		'stafftrack:analytics',
+		'stafftrack:ui',
 	],
 	'bundle' => [
 		'./src/skeleton',

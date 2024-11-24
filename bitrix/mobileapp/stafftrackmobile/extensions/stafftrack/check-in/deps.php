@@ -57,12 +57,14 @@ return [
 		'stafftrack:map',
 		'stafftrack:base-menu',
 		'stafftrack:analytics',
-		'stafftrack:ui'
+		'stafftrack:ui',
+		'stafftrack:entry',
 	],
 	'bundle' => [
 		'./src/pages/check-in',
 		'./src/pages/settings',
 		'./src/pages/cancel-reason',
+		'./src/pages/disabled-check-in',
 		'./src/height-manager',
 		'./src/message',
 		'./src/image-selector',

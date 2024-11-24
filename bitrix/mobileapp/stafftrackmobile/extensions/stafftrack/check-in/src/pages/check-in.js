@@ -7,6 +7,8 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 	const { showToast } = require('toast');
 	const { outline: { check, cross } } = require('assets/icons');
 	const { Haptics } = require('haptics');
+	const { confirmDefaultAction } = require('alert');
+	const { animate } = require('animation');
 
 	const { Button, Icon } = require('ui-system/form/buttons/button');
 	const { Card, CardDesign } = require('ui-system/layout/card');
@@ -25,7 +27,9 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 	const { MuteEnum } = require('stafftrack/model/counter');
 	const { Analytics, CheckinSentEnum } = require('stafftrack/analytics');
 	const { AvaMenu } = require('ava-menu');
-	const { CancelReason } = require('stafftrack/check-in/pages/cancel-reason');
+	const { CancelReasonPage } = require('stafftrack/check-in/pages/cancel-reason');
+	const { OptionManager, OptionEnum } = require('stafftrack/data-managers/option-manager');
+	const { Entry } = require('stafftrack/entry');
 
 	const { PureComponent } = require('layout/pure-component');
 
@@ -43,12 +47,20 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 			};
 
 			this.refs = {
+				layoutWidget: this.props.layoutWidget || PageManager,
 				cancelDay: null,
 				message: null,
 				location: null,
+				buttonContainer: null,
 			};
 
+			this.isButtonContainerVisible = true;
 			this.previousToast = null;
+			this.confirmStartWorkDayResult = null;
+			this.confirmExpiredWorkDayResult = null;
+
+			this.onKeyboardWillShowHandler = this.onKeyboardWillShowHandler.bind(this);
+			this.onKeyboardWillHideHandler = this.onKeyboardWillHideHandler.bind(this);
 
 			this.showCancelReasonMenu = this.showCancelReasonMenu.bind(this);
 			this.startWorkingDay = this.startWorkingDay.bind(this);
@@ -57,11 +69,6 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 			this.closeLayout = this.closeLayout.bind(this);
 
 			this.update = this.update.bind(this);
-		}
-
-		get layoutWidget()
-		{
-			return this.props.layoutWidget;
 		}
 
 		/**
@@ -91,22 +98,6 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 		/**
 		 * @returns {Object}
 		 */
-		get options()
-		{
-			return this.props.options ?? {};
-		}
-
-		/**
-		 * @returns {string}
-		 */
-		get defaultMessage()
-		{
-			return this.options.defaultMessage || Loc.getMessage('M_STAFFTRACK_CHECK_IN_DEFAULT_MESSAGE');
-		}
-
-		/**
-		 * @returns {Object}
-		 */
 		get dialogInfo()
 		{
 			return this.props.dialogInfo;
@@ -114,27 +105,29 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 
 		/**
 		 *
+		 * @returns {Object}
+		 */
+		get config()
+		{
+			return this.props.config || {};
+		}
+
+		/**
+		 *
+		 * @returns {*}
+		 */
+		get diskFolderId()
+		{
+			return this.config.diskFolderId;
+		}
+
+		/**
+		 *
 		 * @returns {Boolean}
 		 */
-		get isGeoByDefaultZone()
+		get timemanAvailable()
 		{
-			return this.props.isGeoByDefaultZone;
-		}
-
-		/**
-		 * @returns {string|null}
-		 */
-		get defaultLocation()
-		{
-			return this.options?.defaultLocation;
-		}
-
-		/**
-		 * @returns {string|null}
-		 */
-		get defaultCustomLocation()
-		{
-			return this.options?.defaultCustomLocation;
+			return this.config.timemanAvailable ?? false;
 		}
 
 		isCounterMuted()
@@ -144,12 +137,38 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 
 		componentDidMount()
 		{
-			ShiftManager.on('updated', this.update);
+			this.bindEvents();
 		}
 
 		componentWillUnmount()
 		{
+			this.unbindEvents();
+		}
+
+		bindEvents()
+		{
+			Keyboard.on(Keyboard.Event.WillShow, this.onKeyboardWillShowHandler);
+			Keyboard.on(Keyboard.Event.WillHide, this.onKeyboardWillHideHandler);
+
+			ShiftManager.on('updated', this.update);
+		}
+
+		unbindEvents()
+		{
+			Keyboard.off(Keyboard.Event.WillShow, this.onKeyboardWillShowHandler);
+			Keyboard.off(Keyboard.Event.WillHide, this.onKeyboardWillHideHandler);
+
 			ShiftManager.off('updated', this.update);
+		}
+
+		onKeyboardWillShowHandler()
+		{
+			this.hideButtonContainer();
+		}
+
+		onKeyboardWillHideHandler()
+		{
+			this.showButtonContainer();
 		}
 
 		async update()
@@ -167,6 +186,7 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 		{
 			return ScrollView(
 				{
+					testId: 'stafftrack-shift',
 					style: {
 						flex: 1,
 					},
@@ -267,16 +287,16 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 		renderMessage()
 		{
 			return new Message({
+				layoutWidget: this.refs.layoutWidget,
 				readOnly: this.shift.isWorkingStatus() || this.shift.isCancelOrNotWorkingStatus(),
-				sendMessage: this.options.sendMessage,
-				layoutWidget: this.layoutWidget,
+				sendMessage: OptionManager.getOption(OptionEnum.SEND_MESSAGE),
 				userInfo: this.user,
 				isCancelReason: false,
-				defaultValue: this.defaultMessage,
+				defaultValue: OptionManager.getOption(OptionEnum.DEFAULT_MESSAGE) || Loc.getMessage('M_STAFFTRACK_CHECK_IN_DEFAULT_MESSAGE'),
 				placeholder: Loc.getMessage('M_STAFFTRACK_CHECK_IN_MESSAGE_PLACEHOLDER'),
 				dialogId: this.dialogInfo.dialogId,
 				dialogName: this.dialogInfo.dialogName,
-				diskFolderId: this.props.diskFolderId,
+				diskFolderId: this.diskFolderId,
 				onFocusText: this.heightManager.onFocusText,
 				onBlurText: this.heightManager.onBlurText,
 				ref: (ref) => {
@@ -290,14 +310,15 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 			return Area(
 				{},
 				new MapView({
-					sendGeo: this.options.sendGeo,
-					isFirstHelpViewed: this.options?.isFirstHelpViewed,
+					layoutWidget: this.refs.layoutWidget,
+					sendGeo: OptionManager.getOption(OptionEnum.SEND_GEO),
+					isFirstHelpViewed: OptionManager.getOption(OptionEnum.IS_FIRST_HELP_VIEWED),
 					readOnly: this.shift.isWorkingStatus() || this.shift.isCancelOrNotWorkingStatus(),
-					location: this.shift.getLocation() || this.defaultLocation,
-					customLocation: this.defaultCustomLocation,
+					location: this.shift.getLocation() || OptionManager.getOption(OptionEnum.DEFAULT_LOCATION),
+					customLocation: OptionManager.getOption(OptionEnum.DEFAULT_CUSTOM_LOCATION),
 					geoImageUrl: this.shift.getGeoImageUrl(),
 					address: this.shift.getAddress(),
-					isGeoByDefaultZone: this.isGeoByDefaultZone,
+					userInfo: this.user,
 					onFocusText: this.heightManager.onFocusText,
 					onBlurText: this.heightManager.onBlurText,
 					ref: (ref) => {
@@ -315,6 +336,12 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 			return Area(
 				{
 					isFirst: true,
+					style: {
+						opacity: 1,
+					},
+					ref: (ref) => {
+						this.refs.buttonContainer = ref;
+					},
 				},
 				!dayStarted && !cancelledDay && this.renderStartDayButton(),
 				!dayStarted && !cancelledDay && this.renderNotWorkingButton(),
@@ -407,6 +434,16 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 				return this.showCheckInToast(Loc.getMessage('M_STAFFTRACK_CHECK_IN_EMPTY_LOCATION_TOAST'), true);
 			}
 
+			if (this.isTimemanDayExpired())
+			{
+				return this.showConfirmExpiredWorkDay();
+			}
+
+			if (this.isNotWorkingDay() && !this.isTimemanDayOpened())
+			{
+				return this.showConfirmStartWorkDay();
+			}
+
 			const shiftDto = {
 				status: StatusEnum.WORKING.getValue(),
 				shiftDate: DateHelper.getCurrentDayCode(),
@@ -417,11 +454,12 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 				dialogId: this.refs.message?.getDialogId(),
 				message: this.refs.message?.getMessage(),
 				imageFileId: this.refs.message?.getFileId(),
+				skipTm: this.hasToSkipTimeman(),
 			};
 
 			this.showCheckInToast();
 			this.removeCounterFromAvaMenu();
-			this.layoutWidget.close();
+			this.closeLayout();
 
 			void ShiftManager.addShift(shiftDto, this.user.departments);
 
@@ -496,13 +534,13 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 
 		closeLayout()
 		{
-			this.layoutWidget?.close();
+			this.refs.layoutWidget?.close();
 		}
 
 		showCancelReasonMenu(callback)
 		{
 			this.cancelReasonMenu ??= new CancelReasonMenu({
-				layoutWidget: this.layoutWidget,
+				layoutWidget: this.refs.layoutWidget,
 				onItemSelected: callback,
 			});
 
@@ -513,7 +551,7 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 		{
 			Haptics.impactMedium();
 
-			const cancelReason = new CancelReason({
+			const cancelReason = new CancelReasonPage({
 				userInfo: this.user,
 				shift: this.shift,
 				selectedReason,
@@ -523,7 +561,106 @@ jn.define('stafftrack/check-in/pages/check-in', (require, exports, module) => {
 				onLayoutClose: this.closeLayout,
 			});
 
-			cancelReason.show(this.layoutWidget);
+			cancelReason.show(this.refs.layoutWidget);
+		}
+
+		showConfirmStartWorkDay()
+		{
+			Haptics.notifyWarning();
+
+			confirmDefaultAction({
+				title: Loc.getMessage('M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_TITLE'),
+				description: Loc.getMessage('M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_DESCRIPTION'),
+				actionButtonText: Loc.getMessage('M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_ACTION'),
+				cancelButtonText: Loc.getMessage('M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_CANCEL'),
+				onAction: () => {
+					this.confirmStartWorkDayResult = false;
+					this.startWorkingDay();
+				},
+				onCancel: () => {
+					this.confirmStartWorkDayResult = true;
+					this.startWorkingDay();
+				},
+			});
+		}
+
+		showConfirmExpiredWorkDay()
+		{
+			Haptics.notifyWarning();
+
+			confirmDefaultAction({
+				title: Loc.getMessage('M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_TITLE'),
+				description: Loc.getMessage('M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_DESCRIPTION'),
+				actionButtonText: Loc.getMessage('M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_CANCEL'),
+				cancelButtonText: Loc.getMessage('M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_ACTION'),
+				onAction: () => {
+					this.confirmExpiredWorkDayResult = true;
+					this.startWorkingDay();
+				},
+				onCancel: () => {
+					this.confirmExpiredWorkDayResult = false;
+					Entry.openTimemanPage();
+				},
+			});
+		}
+
+		isNotWorkingDay()
+		{
+			return this.timemanAvailable
+				&& this.config.isNotWorkingDay
+				&& OptionManager.getOption(OptionEnum.TIMEMAN_INTEGRATION_ENABLED)
+				&& this.confirmStartWorkDayResult === null
+			;
+		}
+
+		isTimemanDayExpired()
+		{
+			return this.timemanAvailable
+				&& this.config.isTimemanDayExpired
+				&& OptionManager.getOption(OptionEnum.TIMEMAN_INTEGRATION_ENABLED)
+				&& this.confirmExpiredWorkDayResult === null
+			;
+		}
+
+		isTimemanDayOpened()
+		{
+			return this.config.isTimemanDayOpened;
+		}
+
+		hasToSkipTimeman()
+		{
+			if (this.confirmExpiredWorkDayResult !== null || this.confirmStartWorkDayResult !== null)
+			{
+				return this.confirmExpiredWorkDayResult || this.confirmStartWorkDayResult;
+			}
+
+			return OptionManager.getOption(OptionEnum.TIMEMAN_INTEGRATION_ENABLED) === false;
+		}
+
+		showButtonContainer()
+		{
+			if (!this.isButtonContainerVisible)
+			{
+				void this.animateToggleButtonContainer({ show: true });
+			}
+		}
+
+		hideButtonContainer()
+		{
+			if (this.isButtonContainerVisible)
+			{
+				void this.animateToggleButtonContainer({ show: false });
+			}
+		}
+
+		animateToggleButtonContainer({ show })
+		{
+			this.isButtonContainerVisible = show;
+
+			return animate(this.refs.buttonContainer, {
+				opacity: show ? 1 : 0,
+				duration: 0,
+			});
 		}
 	}
 

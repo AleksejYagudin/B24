@@ -72,3 +72,25 @@ $MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TURN_OFF_DESCRIPTION'] = 'Сотрудни
 $MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TURN_OFF_CONFIRM'] = 'Да, отключить';
 $MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TURNED_ON_TOAST'] = 'Чекин включён для всех';
 $MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TURNED_OFF_TOAST'] = 'Чекин отключён для всех';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_GEO_TITLE'] = 'Разрешить отправлять геопозицию';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_GEO_DESCRIPTION'] = 'Сотрудники смогут отправлять место, откуда начинают рабочий день';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_GEO_TURNED_ON_TOAST'] = 'Определение геопозиции включено для всех';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_GEO_TURNED_OFF_TOAST'] = 'Определение геопозиции отключено для всех';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_NOT_ADMIN_TOAST'] = 'Изменять настройки может только администратор';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_GO_TO_SETTINGS'] = 'Перейти к настройкам';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_PERSONAL_SECTION_TITLE'] = 'Настройки для меня';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_ADMIN_SECTION_TITLE'] = 'Настройки для всех';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TIMEMAN_TITLE'] = 'Синхронизировать с Рабочим временем';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TIMEMAN_DESCRIPTION'] = 'При отправке чекина учёт рабочего времени запустится автоматически. Завершать рабочий день нужно вручную';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TIMEMAN_TURNED_ON_TOAST'] = 'Синхронизация с Рабочим временем включена';
+$MESS['M_STAFFTRACK_CHECK_IN_SETTINGS_TIMEMAN_TURNED_OFF_TOAST'] = 'Синхронизация с Рабочим временем отключена';
+
+$MESS['M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_TITLE'] = 'Начать рабочий день?';
+$MESS['M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_DESCRIPTION'] = 'Сегодня у вас выходной. Вы можете отправить чекин в чат, но не начинать рабочий день';
+$MESS['M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_ACTION'] = 'Да, начать';
+$MESS['M_STAFFTRACK_CHECK_IN_START_WORKDAY_CONFIRM_CANCEL'] = 'Нет, не надо';
+
+$MESS['M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_TITLE'] = 'Вы не завершили рабочий день';
+$MESS['M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_DESCRIPTION'] = 'Завершите предыдущий день, чтобы начать новый';
+$MESS['M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_ACTION'] = 'Завершить предыдущий день';
+$MESS['M_STAFFTRACK_CHECK_IN_EXPIRED_WORKDAY_CONFIRM_CANCEL'] = 'Не завершать день';

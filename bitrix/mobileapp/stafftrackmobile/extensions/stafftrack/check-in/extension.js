@@ -13,7 +13,7 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 
 	const { Skeleton } = require('stafftrack/check-in/skeleton');
 	const { CheckInPage } = require('stafftrack/check-in/pages/check-in');
-	const { SettingsPage } = require('stafftrack/check-in/pages/settings');
+	const { DisabledCheckInPage } = require('stafftrack/check-in/pages/disabled-check-in');
 	const { HeightManager } = require('stafftrack/check-in/height-manager');
 	const { MoreMenu } = require('stafftrack/check-in/more-menu');
 	const { StatisticsMenu } = require('stafftrack/check-in/statistics-menu');
@@ -21,17 +21,18 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 	const { DateHelper } = require('stafftrack/date-helper');
 	const { ShiftManager } = require('stafftrack/data-managers/shift-manager');
 	const { SettingsManager } = require('stafftrack/data-managers/settings-manager');
+	const { OptionManager, OptionEnum } = require('stafftrack/data-managers/option-manager');
 	const { ShiftModel } = require('stafftrack/model/shift');
 	const { MuteEnum } = require('stafftrack/model/counter');
 	const { Analytics, CheckinOpenEnum, HelpdeskEnum } = require('stafftrack/analytics');
-	const { ShiftAjax } = require('stafftrack/ajax');
+	const { SettingsPage } = require('stafftrack/check-in/pages/settings');
 
 	const { PureComponent } = require('layout/pure-component');
 
 	class CheckIn extends PureComponent
 	{
 		/**
-		 * @param props {{dialogId: string, dialogName: string, layoutWidget: LayoutWidget}}
+		 * @param props {{dialogId: string, dialogName: string, openSettings: boolean, layoutWidget: LayoutWidget}}
 		 */
 		constructor(props)
 		{
@@ -42,16 +43,16 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 
 			this.state = {
 				loading: true,
-				enabledBySettings: true,
+				config: null,
+				options: null,
 				shift: null,
 				dialogInfo: {
 					dialogName: this.props.dialogName,
 					dialogId: this.props.dialogId,
 				},
-				options: null,
 				userInfo: null,
-				diskFolderId: null,
 				counter: null,
+				enabledBySettings: true,
 			};
 
 			this.onKeyboardWillShowHandler = this.onKeyboardWillShowHandler.bind(this);
@@ -63,12 +64,13 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 			this.openHelp = this.openHelp.bind(this);
 			this.load = this.load.bind(this);
 
+			this.settingsOpened = false;
 			this.statisticsMenu = null;
 			this.moreMenu = null;
 
 			this.refs = {
 				checkIn: null,
-				settings: null,
+				disabledCheckIn: null,
 				statisticsMenu: null,
 				moreMenu: null,
 				continueButton: null,
@@ -82,11 +84,6 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 			return this.state.userInfo ?? {};
 		}
 
-		get options()
-		{
-			return this.state.options ?? {};
-		}
-
 		get dialogInfo()
 		{
 			return this.state.dialogInfo ?? {};
@@ -95,6 +92,11 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 		get shift()
 		{
 			return this.state.shift ?? {};
+		}
+
+		get config()
+		{
+			return this.state.config ?? {};
 		}
 
 		isCounterMuted()
@@ -139,25 +141,26 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 			const state = {
 				loading: false,
 				enabledBySettings: SettingsManager.isEnabledBySettings(),
-				shift: new ShiftModel(currentShift),
-				userInfo: BX.prop.getObject(data, 'userInfo', {}),
+				config: BX.prop.getObject(data, 'config', {}),
 				options: BX.prop.getObject(data, 'options', {}),
-				diskFolderId: BX.prop.getNumber(data, 'diskFolderId', null),
+				userInfo: BX.prop.getObject(data, 'userInfo', {}),
 				counter: BX.prop.getObject(data, 'counter', {}),
-				departmentHeadId: BX.prop.getNumber(data, 'departmentHeadId', 0),
-				isGeoByDefaultZone: BX.prop.getBoolean(data, 'isGeoByDefaultZone', true),
+				shift: new ShiftModel(currentShift),
 			};
 
 			this.heightManager.setStatus(state.shift.getStatus());
-			this.heightManager.setEnabledBySettings(state.enabledBySettings);
+			this.heightManager.setEnabledBySettings(state.config.enabledBySettings);
 			this.heightManager.updateSheetHeight();
 
 			if (Type.isNil(this.dialogInfo.dialogName) && Type.isNil(this.dialogInfo.dialogId))
 			{
-				state.dialogInfo = BX.prop.getObject(data, 'dialogInfo', {});
+				state.dialogInfo = state.config.dialogInfo;
 			}
 
-			this.setState(state, () => this.handleFirstHelpView());
+			this.setState(state, () => {
+				this.handleFirstHelpView();
+				this.handleSettingsPage();
+			});
 		}
 
 		onKeyboardWillShowHandler()
@@ -197,7 +200,7 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 				this.state.loading && Skeleton(),
 				!this.state.loading && this.renderHeader(),
 				this.renderCheckIn(),
-				this.renderSettings(),
+				this.renderDisabledCheckIn(),
 			);
 		}
 
@@ -218,18 +221,18 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 			return null;
 		}
 
-		renderSettings()
+		renderDisabledCheckIn()
 		{
 			if (!this.state.loading && !this.state.enabledBySettings)
 			{
-				return new SettingsPage({
+				return new DisabledCheckInPage({
+					layoutWidget: this.layoutWidget,
 					isAdmin: this.user.isAdmin,
 					onHelpClick: this.openHelp,
-					onAdminChatButtonClick: this.closeLayoutWidget,
-					departmentHeadId: this.state.departmentHeadId,
+					onDepartmentHeadChatButtonClick: this.closeLayoutWidget,
 					userInfo: this.state.userInfo,
 					ref: (ref) => {
-						this.refs.settings = ref;
+						this.refs.disabledCheckIn = ref;
 					},
 				});
 			}
@@ -250,7 +253,15 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 				H3({
 					text: Loc.getMessage('M_STAFFTRACK_CHECK_IN_TITLE'),
 				}),
-				this.state.enabledBySettings && View(
+				this.renderHeaderRightIcons(),
+			);
+		}
+
+		renderHeaderRightIcons()
+		{
+			if (this.state.enabledBySettings)
+			{
+				return View(
 					{
 						style: {
 							flexDirection: 'row',
@@ -258,8 +269,10 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 					},
 					this.renderStatisticsChip(),
 					this.renderMoreMenuIcon(),
-				),
-			);
+				);
+			}
+
+			return null;
 		}
 
 		renderStatisticsChip()
@@ -330,6 +343,7 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 				onHelpClick: this.openHelp,
 				isAdmin: this.user.isAdmin,
 				hasShift: this.hasCurrentShift(),
+				timemanAvailable: this.config.timemanAvailable,
 			});
 
 			this.moreMenu.show(this.refs.moreMenu);
@@ -337,10 +351,19 @@ jn.define('stafftrack/check-in', (require, exports, module) => {
 
 		handleFirstHelpView()
 		{
-			if (this.options?.isFirstHelpViewed === false)
+			if (OptionManager.getOption(OptionEnum.IS_FIRST_HELP_VIEWED) === false)
 			{
 				this.openHelp();
-				ShiftAjax.handleFirstHelpView();
+				OptionManager.handleFirstHelpView();
+			}
+		}
+
+		handleSettingsPage()
+		{
+			if (this.props.openSettings && !this.settingsOpened)
+			{
+				new SettingsPage({ isAdmin: this.user.isAdmin }).show(this.layoutWidget);
+				this.settingsOpened = true;
 			}
 		}
 

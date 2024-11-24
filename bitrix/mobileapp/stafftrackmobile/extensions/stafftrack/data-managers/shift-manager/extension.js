@@ -67,7 +67,9 @@ jn.define('stafftrack/data-managers/shift-manager', (require, exports, module) =
 				this.mainData = await this.loadMain(date);
 
 				OptionManager.setOptions(this.mainData.options);
-				SettingsManager.setEnabledBySettings(this.mainData.enabledBySettings);
+				SettingsManager.setEnabledBySettings(this.mainData.config.enabledBySettings);
+				SettingsManager.setGeoEnabled(this.mainData.config.isCheckInGeoEnabled);
+				SettingsManager.setTimemanAvailable(this.mainData.config.timemanAvailable);
 			}
 
 			return this.mainData;

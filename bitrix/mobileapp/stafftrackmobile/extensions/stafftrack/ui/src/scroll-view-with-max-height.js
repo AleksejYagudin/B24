@@ -19,6 +19,7 @@ jn.define('stafftrack/ui/scroll-view-with-max-height', (require, exports, module
 						...this.props.style,
 						height: this.calcSize.getValue2(),
 					},
+					testId: this.props.testId,
 				},
 				View(
 					{
@@ -26,9 +27,9 @@ jn.define('stafftrack/ui/scroll-view-with-max-height', (require, exports, module
 							this.startPosition = { x, y };
 						},
 						onTouchesEnded: ({ x, y }) => {
-							if (this.startPosition?.x === x && this.startPosition?.y === y)
+							if (this.startPosition?.x === x && this.startPosition?.y === y && this.props.onClick)
 							{
-								this.props?.onClick();
+								this.props.onClick();
 							}
 						},
 						onLayoutCalculated: {

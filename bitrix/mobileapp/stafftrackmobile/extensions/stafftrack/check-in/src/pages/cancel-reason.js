@@ -10,6 +10,7 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 	const { Haptics } = require('haptics');
 	const { BottomSheet } = require('bottom-sheet');
 	const { AvaMenu } = require('ava-menu');
+	const { animate } = require('animation');
 
 	const { Box } = require('ui-system/layout/box');
 	const { Area } = require('ui-system/layout/area');
@@ -29,7 +30,7 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 
 	const DEFAULT_HEIGHT = 300;
 
-	class CancelReason extends PureComponent
+	class CancelReasonPage extends PureComponent
 	{
 		constructor(props)
 		{
@@ -41,6 +42,7 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 				textField: null,
 				reasonSelector: null,
 				message: null,
+				buttonContainer: null,
 			};
 
 			this.state = {
@@ -50,6 +52,7 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 			};
 
 			this.cancelReasonMenu = null;
+			this.isButtonContainerVisible = true;
 
 			this.previousToast = null;
 
@@ -141,11 +144,13 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 		onKeyboardWillShowHandler()
 		{
 			this.refs.continueButton?.show();
+			this.hideButtonContainer();
 		}
 
 		onKeyboardWillHideHandler()
 		{
 			this.refs.continueButton?.hide();
+			this.showButtonContainer();
 		}
 
 		onViewShown()
@@ -247,6 +252,7 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 					},
 					resizableByKeyboard: true,
 					onClick: () => Keyboard.dismiss(),
+					testId: 'stafftrack-check-in-cancel-reason',
 				},
 				this.renderHeader(),
 				this.renderBody(),
@@ -374,14 +380,24 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 
 		renderConfirmButton()
 		{
-			return Button({
-				testId: 'stafftrack-check-in-cancel-reason-confirm-button',
-				text: this.getConfirmButtonText(),
-				onClick: this.onConfirmButtonClick,
-				backgroundColor: Color.accentMainPrimary,
-				color: Color.baseWhiteFixed,
-				stretched: true,
-			});
+			return View(
+				{
+					style: {
+						opacity: 1,
+					},
+					ref: (ref) => {
+						this.refs.buttonContainer = ref;
+					},
+				},
+				Button({
+					testId: 'stafftrack-check-in-cancel-reason-confirm-button',
+					text: this.getConfirmButtonText(),
+					onClick: this.onConfirmButtonClick,
+					backgroundColor: Color.accentMainPrimary,
+					color: Color.baseWhiteFixed,
+					stretched: true,
+				}),
+			);
 		}
 
 		getConfirmButtonText()
@@ -460,6 +476,7 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 				timezoneOffset: DateHelper.getTimezoneOffset(),
 				dialogId: this.refs.message.getDialogId(),
 				cancelReason: this.refs.message.getMessage(),
+				skipTm: true,
 			};
 
 			void ShiftManager.addShift(shiftDto, this.user.departments);
@@ -556,7 +573,33 @@ jn.define('stafftrack/check-in/pages/cancel-reason', (require, exports, module) 
 		{
 			return this.state.selectedReason === CancelReasonEnum.CUSTOM.getValue();
 		}
+
+		showButtonContainer()
+		{
+			if (!this.isButtonContainerVisible)
+			{
+				void this.animateToggleButtonContainer({ show: true });
+			}
+		}
+
+		hideButtonContainer()
+		{
+			if (this.isButtonContainerVisible)
+			{
+				void this.animateToggleButtonContainer({ show: false });
+			}
+		}
+
+		animateToggleButtonContainer({ show })
+		{
+			this.isButtonContainerVisible = show;
+
+			return animate(this.refs.buttonContainer, {
+				opacity: show ? 1 : 0,
+				duration: 0,
+			});
+		}
 	}
 
-	module.exports = { CancelReason };
+	module.exports = { CancelReasonPage };
 });

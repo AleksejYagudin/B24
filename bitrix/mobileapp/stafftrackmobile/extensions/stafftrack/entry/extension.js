@@ -12,7 +12,7 @@ jn.define('stafftrack/entry', (require, exports, module) => {
 			return 1;
 		}
 
-		static openCheckIn({ dialogId, dialogName })
+		static openCheckIn({ dialogId, dialogName, openSettings = false })
 		{
 			PageManager.openComponent('JSStackComponent', {
 				name: 'JSStackComponent',
@@ -39,6 +39,7 @@ jn.define('stafftrack/entry', (require, exports, module) => {
 				params: {
 					DIALOG_ID: dialogId,
 					DIALOG_NAME: dialogName,
+					OPEN_SETTINGS: openSettings,
 				},
 			});
 		}
@@ -74,6 +75,22 @@ jn.define('stafftrack/entry', (require, exports, module) => {
 				params: {
 					USER: user,
 					MONTH_CODE: monthCode,
+				},
+			});
+		}
+
+		static openTimemanPage()
+		{
+			PageManager.openPage({
+				url: `${env.siteDir}mobile/timeman/`,
+				useSearchBar: false,
+				cache: false,
+				titleParams: {
+					type: 'section',
+				},
+				backdrop: {
+					onlyMediumPosition: false,
+					mediumPositionPercent: 80,
 				},
 			});
 		}

@@ -585,6 +585,7 @@
 		{
 			return true;
 		}
+		const appId = (typeof Application.getPackageName === 'function' ? Application.getPackageName() : 'Bitrix24');
 
 		if (typeof (Application.registerVoipNotifications) === 'function')
 		{
@@ -597,6 +598,7 @@
 					data: {
 						mobile_action: 'save_device_token',
 						device_name: model,
+						app_id: appId,
 						uuid,
 						device_token_voip: token,
 						device_type: 'APPLE',
@@ -651,6 +653,7 @@
 						device_name: (device.model),
 						uuid: device.uuid,
 						device_token: token,
+						app_id: appId,
 						device_type: dt,
 					},
 				})

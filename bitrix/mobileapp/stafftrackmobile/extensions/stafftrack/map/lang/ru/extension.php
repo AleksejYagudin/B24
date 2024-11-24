@@ -14,3 +14,8 @@ $MESS['M_STAFFTRACK_MAP_GEO_SOURCE_NOT_SPECIFIED'] = 'В вашем Битрик
 $MESS['M_STAFFTRACK_MAP_GEO_ERROR_DEFINITION'] = 'Геоданные временно недоступны, попробуйте позже';
 $MESS['M_STAFFTRACK_MAP_GEO_COMING_SOON'] = 'Скоро появится';
 
+$MESS['M_STAFFTRACK_MAP_GEO_ENABLE_AHA_TITLE'] = 'Геопозиция';
+$MESS['M_STAFFTRACK_MAP_GEO_ENABLE_AHA_ADMIN_DESCRIPTION'] = 'Разрешите доступ к геопозиции в настройках Чекина';
+$MESS['M_STAFFTRACK_MAP_GEO_ENABLE_AHA_REGULAR_DESCRIPTION'] = 'Чтобы отправлять геопозицию, обратитесь к вашему руководителю';
+$MESS['M_STAFFTRACK_MAP_GEO_ENABLE_AHA_ADMIN_BUTTON'] = 'Перейти к настройкам';
+$MESS['M_STAFFTRACK_MAP_GEO_ENABLE_AHA_REGULAR_BUTTON'] = 'Чат с руководителем';

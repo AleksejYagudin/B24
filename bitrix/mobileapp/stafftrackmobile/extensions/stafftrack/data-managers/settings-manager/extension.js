@@ -2,7 +2,7 @@
  * @module stafftrack/data-managers/settings-manager
  */
 jn.define('stafftrack/data-managers/settings-manager', (require, exports, module) => {
-	const { SettingsAjax } = require('stafftrack/ajax');
+	const { FeatureAjax } = require('stafftrack/ajax');
 	const { EventEmitter } = require('event-emitter');
 
 	class SettingsManager extends EventEmitter
@@ -19,14 +19,34 @@ jn.define('stafftrack/data-managers/settings-manager', (require, exports, module
 			this.enabledBySettings = enabledBySettings;
 		}
 
+		setGeoEnabled(geoEnabled)
+		{
+			this.geoEnabled = geoEnabled;
+		}
+
+		setTimemanAvailable(timemanAvailable)
+		{
+			this.timemanAvailable = timemanAvailable;
+		}
+
 		isEnabledBySettings()
 		{
 			return this.enabledBySettings;
 		}
 
+		isGeoEnabled()
+		{
+			return this.geoEnabled;
+		}
+
+		isTimemanAvailable()
+		{
+			return this.timemanAvailable;
+		}
+
 		turnCheckInSettingOn()
 		{
-			void SettingsAjax.turnCheckInSettingOn();
+			void FeatureAjax.turnCheckInSettingOn();
 
 			this.setEnabledBySettings(true);
 
@@ -35,11 +55,25 @@ jn.define('stafftrack/data-managers/settings-manager', (require, exports, module
 
 		turnCheckInSettingOff()
 		{
-			void SettingsAjax.turnCheckInSettingOff();
+			void FeatureAjax.turnCheckInSettingOff();
 
 			this.setEnabledBySettings(false);
 
 			this.emit('updated');
+		}
+
+		turnCheckInGeoOn()
+		{
+			void FeatureAjax.turnCheckInGeoOn();
+
+			this.setGeoEnabled(true);
+		}
+
+		turnCheckInGeoOff()
+		{
+			void FeatureAjax.turnCheckInGeoOff();
+
+			this.setGeoEnabled(false);
 		}
 	}
 

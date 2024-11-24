@@ -20,10 +20,12 @@ jn.define('stafftrack/map', (require, exports, module) => {
 	const { Icon } = require('ui-system/blocks/icon');
 	const { TextField } = require('ui-system/typography/text-field');
 
+	const { LocationMenu } = require('stafftrack/map/location-menu');
+	const { DisabledGeoUserEnum, showDisabledGeoAhaMoment } = require('stafftrack/map/disabled-geo-aha');
 	const { ShiftAjax } = require('stafftrack/ajax');
 	const { LocationEnum } = require('stafftrack/model/shift');
-	const { LocationMenu } = require('stafftrack/map/location-menu');
 	const { Analytics } = require('stafftrack/analytics');
+	const { SettingsManager } = require('stafftrack/data-managers/settings-manager');
 
 	const imagesPath = '/bitrix/mobileapp/stafftrackmobile/extensions/stafftrack/map/images/';
 	// eslint-disable-next-line no-undef
@@ -61,6 +63,7 @@ jn.define('stafftrack/map', (require, exports, module) => {
 			this.locationChipRef = null;
 			this.locationMenu = null;
 			this.textFieldRef = null;
+			this.switcherRef = null;
 
 			this.openSelector = this.openSelector.bind(this);
 			this.onSwitcherClick = this.onSwitcherClick.bind(this);
@@ -80,19 +83,19 @@ jn.define('stafftrack/map', (require, exports, module) => {
 			return this.props.isFirstHelpViewed ?? true;
 		}
 
-		get isGeoByDefaultZone()
+		get isUserAdmin()
 		{
-			return this.props.isGeoByDefaultZone ?? true;
+			return this.props.userInfo?.isAdmin;
 		}
 
 		getDefaultSendGeo()
 		{
 			if (Type.isNil(this.props.sendGeo))
 			{
-				return this.isGeoByDefaultZone;
+				return SettingsManager.isGeoEnabled();
 			}
 
-			return this.isGeoByDefaultZone && this.props.sendGeo;
+			return SettingsManager.isGeoEnabled() && this.props.sendGeo;
 		}
 
 		componentDidMount()
@@ -320,6 +323,7 @@ jn.define('stafftrack/map', (require, exports, module) => {
 						'#ADDRESS#': this.state.addressString,
 					}),
 					color: Color.base4,
+					testId: 'stafftrack-map-address',
 				}),
 			);
 		}
@@ -334,6 +338,9 @@ jn.define('stafftrack/map', (require, exports, module) => {
 						paddingTop: Indent.L.toNumber(),
 					},
 					onClick: this.onSwitcherClick,
+					ref: (ref) => {
+						this.switcherRef = ref;
+					},
 				},
 				Switcher({
 					onClick: this.onSwitcherClick,
@@ -459,16 +466,24 @@ jn.define('stafftrack/map', (require, exports, module) => {
 
 			const deviceGeoPosition = await this.requestGeoPosition();
 
-			if (Type.isNil(deviceGeoPosition))
+			if (Type.isObject(deviceGeoPosition) && deviceGeoPosition.code)
 			{
+				const { code, message } = deviceGeoPosition;
+
 				if (this.isFirstHelpViewed === false && isIOS)
 				{
 					this.handleErrorGeoDefinition();
 				}
-				else
+				else if (code === 1)
 				{
 					this.handleDisabledGeo();
 				}
+				else
+				{
+					this.handleErrorGeoDefinition();
+				}
+
+				console.error(message);
 
 				mapRequested = false;
 
@@ -522,9 +537,9 @@ jn.define('stafftrack/map', (require, exports, module) => {
 			{
 				return await device.getLocation({ accuracy: 'approximate' });
 			}
-			catch
+			catch (error)
 			{
-				return null;
+				return error;
 			}
 		}
 
@@ -563,19 +578,6 @@ jn.define('stafftrack/map', (require, exports, module) => {
 			});
 		}
 
-		handleDisabledByDefaultGeo()
-		{
-			showToast({
-				message: Loc.getMessage('M_STAFFTRACK_MAP_GEO_COMING_SOON'),
-				svg: {
-					content: alert(),
-				},
-				backgroundColor: Color.bgContentInapp.toHex(),
-			});
-
-			Haptics.notifyWarning();
-		}
-
 		handleErrorGeoDefinition(toastMessage = Loc.getMessage('M_STAFFTRACK_MAP_GEO_ERROR_DEFINITION'))
 		{
 			showToast({
@@ -601,9 +603,13 @@ jn.define('stafftrack/map', (require, exports, module) => {
 				return;
 			}
 
-			if (!this.isGeoByDefaultZone)
+			if (!SettingsManager.isGeoEnabled())
 			{
-				this.handleDisabledByDefaultGeo();
+				showDisabledGeoAhaMoment({
+					layoutWidget: this.layoutWidget,
+					targetRef: this.switcherRef,
+					type: this.isUserAdmin ? DisabledGeoUserEnum.ADMIN : DisabledGeoUserEnum.REGULAR,
+				});
 
 				return;
 			}

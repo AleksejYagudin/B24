@@ -12,7 +12,7 @@ jn.define('stafftrack/department-statistics', (require, exports, module) => {
 	const { StageSelector, CardDesign } = require('ui-system/blocks/stage-selector');
 
 	const { ShiftManager } = require('stafftrack/data-managers/shift-manager');
-	const { OptionManager } = require('stafftrack/data-managers/option-manager');
+	const { OptionManager, OptionEnum } = require('stafftrack/data-managers/option-manager');
 	const { Skeleton } = require('stafftrack/department-statistics/skeleton');
 	const { SegmentButton } = require('stafftrack/department-statistics/segment-button');
 	const { TodayStatistics } = require('stafftrack/department-statistics/today-statistics');
@@ -39,7 +39,7 @@ jn.define('stafftrack/department-statistics', (require, exports, module) => {
 				monthStatistics: null,
 			};
 
-			const selectedDepartmentId = Number(OptionManager.getOptions().selectedDepartmentId);
+			const selectedDepartmentId = Number(OptionManager.getOption(OptionEnum.SELECTED_DEPARTMENT_ID));
 			this.selectedDepartment = this.getDepartmentById(selectedDepartmentId) ?? departments[0];
 
 			this.state = {

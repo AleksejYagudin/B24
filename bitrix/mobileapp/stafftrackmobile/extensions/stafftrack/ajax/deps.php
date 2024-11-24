@@ -11,6 +11,6 @@ return [
 		'./src/department-statistics',
 		'./src/user-link-statistics',
 		'./src/option',
-		'./src/settings',
+		'./src/feature',
 	],
 ];
