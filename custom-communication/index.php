@@ -22,7 +22,7 @@ $response = json_decode($responseRaw, true);
 //ID Контакта
 $contactId = $response['result']['OWNER_ID'];
 
-if(($response['result']['PROVIDER_ID'] == 'CRM_EMAIL' || $response['result']['PROVIDER_ID'] == 'CRM_CALL') && $contactId > 0) {
+if(($response['result']['PROVIDER_ID'] == 'CRM_EMAIL' || $response['result']['PROVIDER_ID'] == 'VOXIMPLANT_CALL') && $contactId > 0) {
     $url = 'https://b24loc.ru/rest/1/abgs8vpo71ts1jc2/crm.contact.update.json';
     $curDate = (new \DateTimeImmutable())->format('d.m.Y H:i:s');
     $data = ['ID' => $contactId, 'FIELDS[UF_CUSTOM_DATE_TIME_EMAIL]' => $curDate];
