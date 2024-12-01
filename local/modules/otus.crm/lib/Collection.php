@@ -40,4 +40,9 @@ final class Collection implements \IteratorAggregate
     {
         return new \ArrayIterator($this->items);
     }
+
+    public function isEmpty(): bool
+    {
+        return empty($this->items);
+    }
 }

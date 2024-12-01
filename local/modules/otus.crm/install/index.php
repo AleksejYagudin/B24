@@ -80,7 +80,7 @@ class otus_crm extends CModule
 
         foreach ($entities as $entity) {
             if(!Application::getConnection($entity::getConnectionName())->isTableExists($entity::getTableName())) {
-                Base::getInstance($entity)->createDbTable();
+
             }
         }
     }
@@ -100,6 +100,7 @@ class otus_crm extends CModule
     {
 
         $eventManager = EventManager::getInstance();
+
         $eventManager->registerEventHandler(
            'crm',
             'onEntityDetailsTabsInitialized',
@@ -107,6 +108,15 @@ class otus_crm extends CModule
             '\\Otus\\Crm\\CustomTab\\Handlers',
             'setCustomTabs'
         );
+
+        $eventManager->registerEventHandler(
+            'rest',
+            'onRestServiceBuildDescription',
+            $this->MODULE_ID,
+            '\\Otus\\Crm\\Integration\\Rest\\Service',
+            'onRestServiceBuildDescription'
+        );
+
 
         return true;
     }
@@ -137,6 +147,14 @@ class otus_crm extends CModule
             $this->MODULE_ID,
             '\\Otus\\Crm\\CustomTab\\Handlers',
             'setCustomTabs'
+        );
+
+        $eventManager->unRegisterEventHandler(
+            'rest',
+            'onRestServiceBuildDescription',
+            $this->MODULE_ID,
+            '\\Otus\\Crm\\Integration\\Rest\\Service',
+            'onRestServiceBuildDescription'
         );
 
         return true;

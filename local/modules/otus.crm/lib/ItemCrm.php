@@ -1,6 +1,9 @@
 <?php
 namespace Otus\Crm;
 
+/**
+ * DTO для работы с элементом
+ */
 final class ItemCrm
 {
     /**
@@ -19,6 +22,11 @@ final class ItemCrm
     ) {
     }
 
+    /**
+     * Объект элемента (DTO)
+     * @param int $id
+     * @return ItemCrm
+     */
     public function withId(int $id): ItemCrm
     {
         return new ItemCrm(

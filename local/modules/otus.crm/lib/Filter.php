@@ -14,8 +14,10 @@ final class Filter
     public function toCriteria(): ConditionTree
     {
         $criteria = new ConditionTree();
-        if (isset($this->entityTypeId) && isset($this->entityId)) {
+        if (isset($this->entityTypeId)) {
             $criteria->whereIn('ENTITY_TYPE_ID', $this->entityTypeId);
+        }
+        if (isset($this->entityId)) {
             $criteria->whereIn('ENTITY_ID', $this->entityId);
         }
         return $criteria;

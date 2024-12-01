@@ -1,0 +1,40 @@
+Админский доступ на портал:
+https://b24loc.ru/
+test@mail.ru
+Test~123456789
+
+Используемая таблица с прошлого ДЗ: \Otus\Crm\Entity\CrmCustomTable
+Основной сервис обработчик: local/modules/otus.crm/lib/Integration/Rest/Service.php
+Подписка на событие (модуль уже проинсталирован): local/modules/otus.crm/install/index.php (метод InstallEvents)
+
+Примеры запросов
+1. Создание элемента:
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=12&TEXT_FIELD=test1&INTEGER_FIELD=11
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=12&TEXT_FIELD=test2&INTEGER_FIELD=22
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=12&TEXT_FIELD=test3&INTEGER_FIELD=33
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=13&TEXT_FIELD=test4&INTEGER_FIELD=44
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=13&TEXT_FIELD=test5&INTEGER_FIELD=55
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=13&TEXT_FIELD=test6&INTEGER_FIELD=66
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=13&TEXT_FIELD=test7&INTEGER_FIELD=77
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=13&TEXT_FIELD=test8&INTEGER_FIELD=88
+    https://b24loc.ru/rest/1/zphi8322qyeg1w8c/item.create.json?ENTITY_TYPE_ID=1&ENTITY_ID=13&TEXT_FIELD=test9&INTEGER_FIELD=99
+2. Получение элементов по ID: https://b24loc.ru/rest/1/3tmh1hiczgtyhdsb/item.get.json?ID=1
+    https://b24loc.ru/rest/1/3tmh1hiczgtyhdsb/item.get.json?ID=1
+    https://b24loc.ru/rest/1/3tmh1hiczgtyhdsb/item.get.json?ID=2
+    https://b24loc.ru/rest/1/3tmh1hiczgtyhdsb/item.get.json?ID=3
+    https://b24loc.ru/rest/1/3tmh1hiczgtyhdsb/item.get.json?ID=4
+    https://b24loc.ru/rest/1/3tmh1hiczgtyhdsb/item.get.json?ID=5
+3. Удаление элемента:
+    https://b24loc.ru/rest/1/zcch9q5wrwz5c5w8/item.delete.json?ID=5
+4. Получение элементов:
+    Общий список (без фильтра): https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json
+    Фильтр по ENTITY_ID: https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?filter[ENTITY_ID]=12
+    Фильтр по ENTITY_ID и ENTITY_TYPE_ID (по другим полям фильтровать нельзя - так задумано):
+        https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?filter[ENTITY_ID]=12&filter[ENTITY_TYPE_ID]=1
+        https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?filter[ENTITY_ID]=13&filter[ENTITY_TYPE_ID]=1
+    Фильтр только с лимитом:
+        https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?navigation[LIMIT]=2
+    Фильтр только со смещением (в таком случае лимит устанавливается автоматически - 10):
+        https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?navigation[OFFSET]=1
+    Фильтр по ENTITY_ID c лимитом: https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?filter[ENTITY_TYPE_ID]=1&navigation[LIMIT]=2
+    Фильтр по ENTITY_ID c лимитом и смещением: https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?filter[ENTITY_TYPE_ID]=1&navigation[LIMIT]=2&navigation[OFFSET]=4
