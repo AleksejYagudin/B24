@@ -26,7 +26,12 @@ Test~123456789
     https://b24loc.ru/rest/1/3tmh1hiczgtyhdsb/item.get.json?ID=5
 3. Удаление элемента:
     https://b24loc.ru/rest/1/zcch9q5wrwz5c5w8/item.delete.json?ID=5
-4. Получение элементов:
+4. Обновление элемента:
+    https://b24loc.ru/rest/1/hmp2y4cju4lggki3/item.update.json?ID=2&ENTITY_TYPE_ID=2&ENTITY_ID=22&TEXT_FIELD=тест&INTEGER_FIELD=111
+    https://b24loc.ru/rest/1/hmp2y4cju4lggki3/item.update.json?ID=2&ENTITY_ID=221&TEXT_FIELD=тест&INTEGER_FIELD=111
+    https://b24loc.ru/rest/1/hmp2y4cju4lggki3/item.update.json?ID=2&TEXT_FIELD=тест123&INTEGER_FIELD=111
+    https://b24loc.ru/rest/1/hmp2y4cju4lggki3/item.update.json?ID=2&INTEGER_FIELD=1113
+5. Получение элементов:
     Общий список (без фильтра): https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json
     Фильтр по ENTITY_ID: https://b24loc.ru/rest/1/ynualw9p3sx68uog/item.list.json?filter[ENTITY_ID]=12
     Фильтр по ENTITY_ID и ENTITY_TYPE_ID (по другим полям фильтровать нельзя - так задумано):

@@ -65,6 +65,9 @@ class Service extends IRestService
                 'item.get' => [
                     'callback' => $service->get(...)
                 ],
+                'item.update' => [
+                    'callback' => $service->update(...)
+                ],
                 'item.delete' => [
                     'callback' => $service->delete(...)
                 ]
@@ -148,6 +151,36 @@ class Service extends IRestService
         }
 
         return $this->convertItem($item);
+
+    }
+
+    /**
+     * Обновление элемента
+     * @param array $parameters
+     * @param $navigation
+     * @param CRestServer $server
+     * @return array
+     * @throws RestException
+     * @throws ServiceException
+     * @throws \Otus\Crm\NotFoundException
+     */
+    public function update(array $parameters, $navigation, CRestServer $server): array
+    {
+        if(!isset($parameters['ID'])) {
+            throw new RestException(Loc::getMessage("ITEM_REST_ARGUMENT_NOT_DEFINED_ID"), RestException::ERROR_ARGUMENT);
+        }
+
+        $itemId = (int) $parameters['ID'];
+        if($itemId <= 0) {
+            throw new RestException(Loc::getMessage("ITEM_REST_ARGUMENT_NOT_POSITIVE_NUMBER"), RestException::ERROR_ARGUMENT);
+        }
+
+        if($itemId === null) {
+            throw new RestException(Loc::getMessage("ITEM_REST_ITEM_NOT_FOUND"), RestException::ERROR_NOT_FOUND);
+        }
+
+        $itemCrmUpdate = $this->itemService->update($itemId, $parameters, self::TRACKED_FIELDS);
+        return ['ID' => $itemCrmUpdate, 'STATUS' => 'OK'];
 
     }
 

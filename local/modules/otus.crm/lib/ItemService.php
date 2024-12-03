@@ -6,6 +6,7 @@ use Bitrix\Main\SystemException;
 use Bitrix\Main\UI\PageNavigation;
 use Bitrix\Main\ArgumentException;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\ORM\Fields\FieldTypeMask;
 use Otus\Crm\Entity\CrmCustomTable;
 
 /**
@@ -163,6 +164,62 @@ class ItemService
         $itemCrm = $itemCrm->withId($addResult->getId());
 
         return $itemCrm;
+    }
+
+
+    /**
+     * Обновление элемента
+     * @param ItemCrm $itemCrm
+     * @return ItemCrm
+     * @throws ArgumentException
+     * @throws ServiceException
+     * @throws SystemException
+     * @throws \Bitrix\Main\ObjectPropertyException
+     */
+    public function update($itemCrmId, array $fields, array $trackFields): int
+    {
+        $itemCrm = CrmCustomTable::getById($itemCrmId)->fetchObject();
+
+        if(!$itemCrm) {
+            throw new ServiceException(Loc::getMessage('ITEM_CRM_ERROR_UPDATE_EMPTY'));
+        }
+
+        try {
+            $entityTypeId =$fields['ENTITY_TYPE_ID'] ?? $itemCrm->getEntityTypeId();
+            $entityId = $fields['ENTITY_ID'] ?? $itemCrm->getEntityId();
+            $textField = $fields['TEXT_FIELD'] ?? $itemCrm->getTextField();
+            $integerFields = $fields['INTEGER_FIELD'] ?? $itemCrm->getIntegerField();
+
+            $entityObject = $itemCrm
+                ->setEntityTypeId($entityTypeId)
+                ->setEntityId($entityId)
+                ->setTextField($textField)
+                ->setIntegerField($integerFields);
+
+            foreach ($entityObject->collectValues(fieldsMask: FieldTypeMask::FLAT) as $field => $currentValue) {
+                if (!in_array($field, $trackFields, true)) {
+                    continue;
+                }
+
+                if (!$entityObject->isChanged($field)) {
+                    continue;
+                }
+
+            }
+
+            $updateResult = $entityObject->save();
+
+
+
+        } catch (\Exception $e) {
+            throw new ServiceException(Loc::getMessage('ITEM_CRM_ERROR_UPDATE'), previous: $e);
+        }
+
+        if (!$updateResult->isSuccess()) {
+            throw ServiceException::createFromCollection($updateResult->getErrorCollection());
+        }
+
+        return $itemCrm->getId();
     }
 
 
